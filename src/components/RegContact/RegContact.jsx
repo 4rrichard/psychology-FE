@@ -26,6 +26,7 @@ function RegContact({ clickBack, fullDate, setDisableDate }) {
 
   const sendMessage = () => {
     formData.message += dateMessage;
+    formData.captcha += recaptchaValue;
     const fullForm = new FormData();
     fullForm.append("fullName", formData.fullName);
     fullForm.append("email", formData.email);
@@ -36,7 +37,12 @@ function RegContact({ clickBack, fullDate, setDisableDate }) {
 
     console.log(...fullForm);
     axios
-      .post("/api/sendemail", { fullForm, recaptchaValue })
+      .post("/api/sendemail", fullForm, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        withCredentials: true,
+      })
       .then(() => {
         setFormData({
           fullName: "",
