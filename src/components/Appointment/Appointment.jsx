@@ -45,7 +45,7 @@ function Appointment() {
     JSON.parse(localStorage.getItem("bookedTime") ?? "[]")
   );
 
-  const [adminDisable, setAdminDisable] = useState(false);
+  // const [adminDisable, setAdminDisable] = useState(false);
 
   const [sendFullDate, setSendFullDate] = useState("");
 
