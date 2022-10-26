@@ -16,6 +16,7 @@ function RegContact({ clickBack, fullDate, setDisableDate }) {
     phoneNum: "",
     message: "",
     messageError: false,
+    captcha: "",
   });
   const [recaptchaValue, setRecaptchaValue] = useState("");
 
@@ -32,6 +33,7 @@ function RegContact({ clickBack, fullDate, setDisableDate }) {
     fullForm.append("email", formData.email);
     fullForm.append("phoneNum", formData.phoneNum);
     fullForm.append("message", formData.message);
+    fullForm.append("captcha", formData.captcha);
 
     captchaRef.current.reset();
 
