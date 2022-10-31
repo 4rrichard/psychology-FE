@@ -7,6 +7,17 @@ import { useEffect, useContext } from "react";
 import AuthContext from "../../context/AuthProvider";
 
 function Appointment() {
+  //--- HELP FOR THE CALENDAR ---
+
+  // const nowDate = DateTime.now().toFormat("dd");
+
+  // const nowHour = DateTime.now().c.hour;
+  // const yesterday = DateTime.now().plus({ day: -1 });
+  // const tomorrowHour = DateTime.now().plus({ day: 1 }).c.hour;
+  // const hourss = DateTime.now().plus({ day: 1 }).plus({ hour: -1 });
+  // const nowHourFormatted = DateTime.now()
+  //   .plus({ hour: 1 })
+  //   .toLocaleString(DateTime.TIME_SIMPLE);
   // const day = DateTime.local(2022, 9, 20, { locale: "en" }).day;
   // const weekday = DateTime.local(2022, 9, 20, { locale: "en" }).weekdayLong;
   // const year = DateTime.local(2022, 9, 20, { locale: "en" }).year;
@@ -18,8 +29,6 @@ function Appointment() {
   // const start = DateTime.local(2022, 9, 19, { locale: "en" });
   // const end = DateTime.local(2022, 9, 26, { locale: "en" });
 
-  // console.log(dateArray[0].setLocale("en").weekdayLong);
-
   // const weekdays = Info.weekdays("long", { locale: "en" });
   // const nowFullDateStart = DateTime.now().toFormat("MMMM dd, yyyy");
   // const nowFullDateEnd = DateTime.now()
@@ -28,6 +37,8 @@ function Appointment() {
 
   //--- localstorage data delete ---
   // localStorage.clear();
+
+  // --- STATES ---
 
   const { auth } = useContext(AuthContext);
   const admin = auth.admin;
@@ -38,73 +49,22 @@ function Appointment() {
   const [incrementStart, setIncrementStart] = useState(0);
   const [incrementEnd, setIncrementEnd] = useState(6);
 
-  //rename usestate
+  const [sendFullDate, setSendFullDate] = useState("");
+
   const [isPreviousDisabled, setIsPreviousDisabled] = useState(false);
 
   const [disableDate, setDisableDate] = useState(() =>
     JSON.parse(localStorage.getItem("bookedTime") ?? "[]")
   );
 
-  // const [adminDisable, setAdminDisable] = useState(false);
+  //--- DATA FOR THE CALENDAR ---
 
-  const [sendFullDate, setSendFullDate] = useState("");
-
-  const handleClick = (e) => {
-    const selectHour = e.target.innerText;
-    const selectMonth =
-      e.target.parentNode.firstElementChild.nextElementSibling.innerText;
-    const selectDate =
-      e.target.parentNode.firstElementChild.nextElementSibling
-        .nextElementSibling.innerText;
-    const selectYear = e.target.parentNode.firstElementChild.innerText;
-
-    setDisplay(false);
-    setSendFullDate({
-      hour: selectHour,
-      date: selectDate,
-      month: selectMonth,
-      year: selectYear,
-    });
-
-    // if (admin) {
-    //   isAppointmentDisabled(setAdminDisable(!adminDisable));
-    // }
-  };
-
-  console.log(admin);
-
-  const clickBack = () => {
-    setDisplay(true);
-  };
-
-  const handleNextClick = () => {
-    setIncrementStart(incrementStart + 7);
-    setIncrementEnd(incrementEnd + 7);
-    setDisplayNextWeek(true);
-  };
-  const handlePrevClick = () => {
-    setIncrementStart((prevState) => prevState - 7);
-    setIncrementEnd((prevState) => prevState - 7);
-    setDisplayNextWeek(true);
-  };
-
-  // const nowDate = DateTime.now().toFormat("dd");
-
-  // const nowHour = DateTime.now().c.hour;
-  // const yesterday = DateTime.now().plus({ day: -1 });
-  // const tomorrowHour = DateTime.now().plus({ day: 1 }).c.hour;
   const tomorrow = DateTime.now().plus({ day: 1 });
-  // console.log(tomorrow.c.hour + ":00");
-  // const hourss = DateTime.now().plus({ day: 1 }).plus({ hour: -1 });
-  // console.log(hourss);
+
   const hoursArray = [];
   for (let i = tomorrow.c.hour; i >= 10; i--) {
     hoursArray.push(`${i}:${"00"}`);
   }
-  // console.log(hoursArray);
-  // const nowHourFormatted = DateTime.now()
-  //   .plus({ hour: 1 })
-  //   .toLocaleString(DateTime.TIME_SIMPLE);
 
   const now = DateTime.now();
 
@@ -141,7 +101,98 @@ function Appointment() {
 
   const dateArray = Array.from(days(interval));
 
-  //--- Disable previous button ---
+  const dateArrayNextWeek = Array.from(days(intervalNextWeek));
+
+  const yearNext = dateArrayNextWeek
+    .map((year) => year.c)
+    .map((year) => year.year);
+
+  const daysOfSeptNextWeek = dateArrayNextWeek
+    .map((dates) => dates.c)
+    .map((date) => date.day);
+
+  const weekdaysOfSept = dateArray.map(
+    (dates) => dates.setLocale("en").weekdayLong
+  );
+
+  const nextMonths = dateArrayNextWeek.map(
+    (month) => month.setLocale("en").monthLong
+  );
+
+  const monthArray = [];
+  for (let i = 0; i < 7; i++) {
+    monthArray.push(nowMonth);
+  }
+
+  const hoursArr = [];
+  for (let i = 10; i < 19; i++) {
+    hoursArr.push(`${i}:${"00"}`);
+  }
+
+  const nextMonthArray = [];
+
+  for (let i = 0; i < 7; i++) {
+    nextMonthArray.push(nextMonth);
+  }
+
+  const wholeWeekArrayNextWeek = [];
+
+  nextMonths.map((month, index) => {
+    return wholeWeekArrayNextWeek.push({
+      year: yearNext[index],
+      month: month,
+      days: daysOfSeptNextWeek[index],
+      weekdays: weekdaysOfSept[index],
+    });
+  });
+
+  //--- CLICK HANDLERS ---
+
+  const handleClickOnTime = (e) => {
+    const selectHour = e.target.innerText;
+    const selectMonth =
+      e.target.parentNode.firstElementChild.nextElementSibling.innerText;
+    const selectDate =
+      e.target.parentNode.firstElementChild.nextElementSibling
+        .nextElementSibling.innerText;
+    const selectYear = e.target.parentNode.firstElementChild.innerText;
+
+    if (!admin) {
+      setDisplay(false);
+    }
+
+    setSendFullDate({
+      hour: selectHour,
+      date: selectDate,
+      month: selectMonth,
+      year: selectYear,
+    });
+
+    if (admin) {
+      setDisableDate((old) => [
+        ...old,
+        [parseInt(selectYear), selectMonth, parseInt(selectDate), selectHour],
+      ]);
+    }
+  };
+
+  const clickBack = () => {
+    setDisplay(true);
+  };
+
+  const handleNextClick = () => {
+    setIncrementStart(incrementStart + 7);
+    setIncrementEnd(incrementEnd + 7);
+    setDisplayNextWeek(true);
+  };
+
+  //--- DISABLE PREVIOUS BUTTON ---
+  const handlePrevClick = () => {
+    setIncrementStart((prevState) => prevState - 7);
+    setIncrementEnd((prevState) => prevState - 7);
+    setDisplayNextWeek(true);
+  };
+
   useEffect(() => {
     const arrayFirst = [];
     arrayFirst.push(
@@ -172,81 +223,15 @@ function Appointment() {
     startOfWeek.c.month,
   ]);
 
-  // useEffect(() => {
-  //   const data = window.localStorage.getItem("bookedTime");
-  //   setDisableDate(JSON.parse(data));
-  // }, []);
-
-  //--- Saving state after refresh  ---
+  //--- SAVING DATA IN LOCAL STORAGE  ---
 
   useEffect(() => {
     window.localStorage.setItem("bookedTime", JSON.stringify(disableDate));
   }, [disableDate]);
 
-  // const daysOfSept = dateArray.map((dates) => dates.c).map((date) => date.day);
-
-  const dateArrayNextWeek = Array.from(days(intervalNextWeek));
-
-  const yearNext = dateArrayNextWeek
-    .map((year) => year.c)
-    .map((year) => year.year);
-
-  const daysOfSeptNextWeek = dateArrayNextWeek
-    .map((dates) => dates.c)
-    .map((date) => date.day);
-
-  const weekdaysOfSept = dateArray.map(
-    (dates) => dates.setLocale("en").weekdayLong
-  );
-
-  const nextMonths = dateArrayNextWeek.map(
-    (month) => month.setLocale("en").monthLong
-  );
-
-  const monthArray = [];
-  for (let i = 0; i < 7; i++) {
-    monthArray.push(nowMonth);
-  }
-
-  const hoursArr = [];
-  for (let i = 10; i < 19; i++) {
-    hoursArr.push(`${i}:${"00"}`);
-  }
-
-  // const wholeWeekArray = [];
-  // monthArray.map((month, index) => {
-  //   return wholeWeekArray.push({
-  //     month: month,
-  //     days: daysOfSept[index],
-  //     weekdays: weekdaysOfSept[index],
-  //   });
-  // });
-
-  const nextMonthArray = [];
-
-  for (let i = 0; i < 7; i++) {
-    nextMonthArray.push(nextMonth);
-  }
-
-  const wholeWeekArrayNextWeek = [];
-
-  nextMonths.map((month, index) => {
-    return wholeWeekArrayNextWeek.push({
-      year: yearNext[index],
-      month: month,
-      days: daysOfSeptNextWeek[index],
-      weekdays: weekdaysOfSept[index],
-    });
-  });
-
-  //Get text of button : event.target.innerText
-  // && nowHour >= hours.slice(0, 2)
+  //--- DISABLE APPOINTMENT DATES ---
 
   function isAppointmentDisabled(hours, wholeMonth) {
-    //now.c.hour + ":00"
-    // console.log(parseInt(hours.slice(0, 2)));
-    // console.log(hoursArray.map((hour) => parseInt(hour.slice(0, 2))));
-
     if (
       wholeMonth.year === tomorrow.c.year &&
       wholeMonth.month === tomorrowMonth &&
@@ -309,7 +294,7 @@ function Appointment() {
                     <Link
                       className="appointment--hours"
                       value={10}
-                      onClick={handleClick}
+                      onClick={handleClickOnTime}
                       disabled={isAppointmentDisabled(hours, wholeMonth)}
                       key={hours}
                     >
@@ -330,7 +315,7 @@ function Appointment() {
                   {hoursArr.map((hours) => (
                     <Link
                       className="appointment--hours"
-                      onClick={handleClick}
+                      onClick={handleClickOnTime}
                       disabled={isAppointmentDisabled(hours, wholeMonth)}
                       key={hours}
                     >
