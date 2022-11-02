@@ -32,7 +32,13 @@ function NavBar() {
   return (
     <>
       <nav className="navbar">
-        <Link to="/" className="nav--name">
+        <Link
+          to="/"
+          onClick={() => {
+            setNavOpen(false);
+          }}
+          className="nav--name"
+        >
           Psychologist Gizem Cakin
         </Link>
 
@@ -83,7 +89,11 @@ function NavBar() {
               Contacts
             </Scroll>
           </div>
-          <Link to="/appointment" className="nav--book-appointment-btn">
+          <Link
+            to="/appointment"
+            onClick={menuToggle}
+            className="nav--book-appointment-btn"
+          >
             Book an appointment
           </Link>
         </div>
