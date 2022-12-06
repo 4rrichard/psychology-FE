@@ -5,6 +5,7 @@ import "./Appointment.css";
 import RegContact from "../RegContact/RegContact";
 import { useEffect, useContext } from "react";
 import AuthContext from "../../context/AuthProvider";
+import { useRef } from "react";
 
 function Appointment() {
   //--- HELP FOR THE CALENDAR ---
@@ -35,13 +36,61 @@ function Appointment() {
   //   .plus({ days: 6 })
   //   .toFormat("MMMM dd, yyyy");
 
-  //--- localstorage data delete ---
-  // localStorage.clear();
+  class MyDate {
+    constructor(parts) {
+      this.data = parts;
+    }
+
+    equalsTo(other) {
+      return (
+        this.data[0] === other.data[0] &&
+        this.data[1] === other.data[1] &&
+        this.data[2] === other.data[2] &&
+        this.data[3] === other.data[3]
+      );
+    }
+
+    toString() {
+      return `MyDate {${this.data[0]}, ${this.data[1]}, ${this.data[2]}, ${this.data[3]}}`;
+    }
+  }
+
+  class SelectedValues {
+    constructor(values) {
+      this.values = values;
+    }
+
+    toggle(value) {
+      const index = this.values.findIndex((element) => element.equalsTo(value));
+
+      let newSelectedValues = [];
+
+      if (index === -1) {
+        // not found
+        newSelectedValues = [value, ...this.values];
+      } else {
+        newSelectedValues = [
+          ...this.values.slice(0, index),
+          ...this.values.slice(index + 1),
+        ];
+      }
+
+      return new SelectedValues(newSelectedValues);
+    }
+  }
 
   // --- STATES ---
 
   const { auth } = useContext(AuthContext);
   const admin = auth.admin;
+  const buttons = useRef(new Set([]));
+  buttons.current.delete(null);
+
+  for (const button of buttons.current.values()) {
+    if (button.classList.value.includes("admin-disable")) {
+      console.log(button);
+    }
+  }
 
   const [display, setDisplay] = useState(true);
   const [displayNextWeek, setDisplayNextWeek] = useState(false);
@@ -55,6 +104,10 @@ function Appointment() {
 
   const [disableDate, setDisableDate] = useState(() =>
     JSON.parse(localStorage.getItem("bookedTime") ?? "[]")
+  );
+
+  const [adminDisable, setAdminDisable] = useState(
+    () => new SelectedValues([])
   );
 
   //--- DATA FOR THE CALENDAR ---
@@ -148,39 +201,30 @@ function Appointment() {
 
   //--- CLICK HANDLERS ---
 
-  const handleClickOnTime = (e) => {
-    const selectHour = e.target.innerText;
-    const selectMonth =
-      e.target.parentNode.firstElementChild.nextElementSibling.innerText;
-    const selectDate =
-      e.target.parentNode.firstElementChild.nextElementSibling
-        .nextElementSibling.innerText;
-    const selectYear = e.target.parentNode.firstElementChild.innerText;
-
+  const handleClickOnTime = (hours, fullDay) => {
     if (!admin) {
       setDisplay(false);
     }
 
     setSendFullDate({
-      hour: selectHour,
-      date: selectDate,
-      month: selectMonth,
-      year: selectYear,
+      year: fullDay.year,
+      month: fullDay.month,
+      date: fullDay.days,
+      hour: hours,
     });
 
-    if (admin) {
-      setDisableDate((old) => [
-        ...old,
-        [parseInt(selectYear), selectMonth, parseInt(selectDate), selectHour],
-      ]);
-    }
+    setAdminDisable((oldSelectedValues) =>
+      oldSelectedValues.toggle(
+        new MyDate([fullDay.year, fullDay.month, fullDay.days, hours])
+      )
+    );
   };
 
   const clickBack = () => {
     setDisplay(true);
   };
 
-  const handleNextClick = (e) => {
+  const handleNextClick = () => {
     setIncrementStart(incrementStart + 7);
     setIncrementEnd(incrementEnd + 7);
     setDisplayNextWeek(true);
@@ -248,6 +292,10 @@ function Appointment() {
       return true;
     }
 
+    // if (document.getElementsByClassName("admin-disable") === ) {
+    //   return true;
+    // }
+
     return (
       disableDate.find((value) => {
         if (
@@ -263,6 +311,29 @@ function Appointment() {
       }) !== undefined
     );
   }
+
+  const isBooked = (time, fullDay) => {
+    const wholeDayArr = Array.from([
+      fullDay.year,
+      fullDay.month,
+      fullDay.days,
+      time,
+    ]);
+
+    const data = adminDisable.values.map((e) => {
+      return e.data;
+    });
+
+    const checkedData = data.find((val) =>
+      val.every((v, i) => v === wholeDayArr[i])
+    );
+
+    if (checkedData) {
+      return true;
+    } else {
+      return false;
+    }
+  };
 
   return (
     <>
@@ -286,17 +357,19 @@ function Appointment() {
             {!displayNextWeek &&
               wholeWeekArrayNextWeek.map((wholeMonth, index) => (
                 <div className="appointment--fulldate" key={index}>
-                  <p className="year-no-display">{wholeMonth.year}</p>
                   <h2 className="appointment--month">{wholeMonth.month}</h2>
                   <h1 className="appointment--date">{wholeMonth.days}</h1>
                   <h2 className="appointment--day">{wholeMonth.weekdays}</h2>
-                  {hoursArr.map((hours) => (
+                  {hoursArr.map((hours, i) => (
                     <Link
-                      className="appointment--hours"
+                      className={`appointment--hours ${
+                        isBooked(hours, wholeMonth) && "admin-disable"
+                      }`}
+                      ref={(element) => buttons.current.add(element)}
                       value={10}
-                      onClick={handleClickOnTime}
+                      onClick={() => handleClickOnTime(hours, wholeMonth)}
                       disabled={isAppointmentDisabled(hours, wholeMonth)}
-                      key={hours}
+                      key={i}
                     >
                       {hours}
                     </Link>
@@ -306,7 +379,6 @@ function Appointment() {
             {displayNextWeek &&
               wholeWeekArrayNextWeek.map((wholeMonth, index) => (
                 <div className="appointment--fulldate" key={index}>
-                  <p className="year-no-display">{wholeMonth.year}</p>
                   <h2 className="appointment--month">{wholeMonth.month}</h2>
 
                   <h1 className="appointment--date">{wholeMonth.days}</h1>

@@ -72,9 +72,6 @@
       align-items: center;
       flex-grow: 1;
       flex-basis: 0;
-      .year-no-display {
-        display: none;
-      }
       .appointment--month {
         font-family: "Quicksand", sans-serif;
         font-weight: 400;
@@ -118,6 +115,12 @@
         background-color: lightgray;
         cursor: default;
         pointer-events: none;
+        border: 1px solid rgb(185, 183, 183);
+      }
+      .admin-disable {
+        opacity: 60%;
+        color: grey;
+        background-color: rgb(175, 174, 174);
         border: 1px solid rgb(185, 183, 183);
       }
     }
