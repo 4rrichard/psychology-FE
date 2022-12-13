@@ -3,9 +3,10 @@ import { DateTime, Interval } from "luxon";
 import { Link } from "react-router-dom";
 import "./Appointment.css";
 import RegContact from "../RegContact/RegContact";
+import Booked from "../Booked/Booked";
 import { useEffect, useContext } from "react";
 import AuthContext from "../../context/AuthProvider";
-// import { useRef } from "react";
+import { useRef } from "react";
 import axios from "../../api/axios";
 
 function Appointment() {
@@ -14,7 +15,7 @@ function Appointment() {
   // const nowDate = DateTime.now().toFormat("dd");
 
   // const nowHour = DateTime.now().c.hour;
-  // const yesterday = DateTime.now().plus({ day: -1 });
+
   // const tomorrowHour = DateTime.now().plus({ day: 1 }).c.hour;
   // const hourss = DateTime.now().plus({ day: 1 }).plus({ hour: -1 });
   // const nowHourFormatted = DateTime.now()
@@ -84,9 +85,19 @@ function Appointment() {
 
   const { auth } = useContext(AuthContext);
   const admin = auth.admin;
-  // const buttons = useRef(new Set([]));
-  // buttons.current.delete(null);
+  const buttons = useRef(new Set([]));
+  buttons.current.delete(null);
 
+  // console.log(buttons.current);
+
+  useEffect(() => {
+    const arr = [];
+    for (const button of buttons.current) {
+      arr.push(button);
+    }
+  }, [buttons]);
+
+  // console.log(arr);
   // for (const button of buttons.current.values()) {
   //   if (button.classList.value.includes("admin-disable")) {
   //     console.log(button);
@@ -108,9 +119,13 @@ function Appointment() {
   // );
   const [disableDate, setDisableDate] = useState([]);
 
+  const [fullBookedData, setFullBookedData] = useState();
+
   const [adminDisable, setAdminDisable] = useState(
     () => new SelectedValues([])
   );
+
+  const [modal, setModal] = useState(false);
 
   //--- DATA FOR THE CALENDAR ---
 
@@ -122,6 +137,7 @@ function Appointment() {
   }
 
   const now = DateTime.now();
+  const yesterday = DateTime.now({ locale: "en" }).plus({ day: -1 });
 
   const nowMonth = DateTime.now().setLocale("en").monthLong;
   const tomorrowMonth = DateTime.now()
@@ -274,6 +290,9 @@ function Appointment() {
   // useEffect(() => {
   //   window.localStorage.setItem("bookedTime", JSON.stringify(disableDate));
   // }, [disableDate]);
+  const toggleModal = () => {
+    setModal(!modal);
+  };
 
   //--- GETTING DATE FROM DATABASE  ---
 
@@ -282,7 +301,8 @@ function Appointment() {
   useEffect(() => {
     axios.get("/api/getregdata").then((response) => {
       setDisableDate(response.data.map((date) => date.fullDate));
-      console.log(response.data);
+      setFullBookedData(response.data.map((bookedData) => bookedData));
+      // console.log(response.data);
     });
   }, [setDisableDate, refresh]);
 
@@ -299,7 +319,7 @@ function Appointment() {
         })
         .then((response) => {
           console.log(response.data);
-          setRefresh(true);
+          setRefresh((prev) => !prev);
         })
     );
   };
@@ -396,7 +416,7 @@ function Appointment() {
                       className={`appointment--hours ${
                         isBooked(hours, wholeMonth) && "admin-disable"
                       }`}
-                      // ref={(element) => buttons.current.add(element)}
+                      ref={(element) => buttons.current.add(element)}
                       value={10}
                       onClick={() => handleClickOnTime(hours, wholeMonth)}
                       disabled={isAppointmentDisabled(hours, wholeMonth)}
@@ -431,13 +451,35 @@ function Appointment() {
               ))}
           </div>
           {admin && (
-            <button
-              className="admin-disable-selected-btn"
-              onClick={saveSelected}
-              disabled={adminDisable.values.length === 0 ? true : false}
-            >
-              Disable Selected Dates
-            </button>
+            <div className="admin-btns">
+              <button
+                className="admin-disable-selected-btn"
+                onClick={saveSelected}
+                disabled={adminDisable.values.length === 0 ? true : false}
+              >
+                Disable Selected Dates
+              </button>
+              <button
+                className="admin-show-dates-btn"
+                onClick={() => {
+                  toggleModal();
+                  setRefresh((prev) => !prev);
+                }}
+              >
+                Show Booked Dates
+              </button>
+              {modal && (
+                <Booked
+                  toggleModal={toggleModal}
+                  disableDate={disableDate}
+                  modal={modal}
+                  fullBookedData={fullBookedData}
+                  setRefresh={setRefresh}
+                  now={startOfWeek}
+                  yesterday={yesterday}
+                />
+              )}
+            </div>
           )}
         </section>
       ) : (
