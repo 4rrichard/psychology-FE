@@ -7,11 +7,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faXmark } from "@fortawesome/free-solid-svg-icons";
 import AuthContext from "../../context/AuthProvider";
 import axios from "../../api/axios";
+import LogoutPopup from "../LogoutPopup/LogoutPopup";
 import "./NavBar.css";
 
 function NavBar() {
   const { auth, setAuth } = useContext(AuthContext);
   const [navOpen, setNavOpen] = useState(false);
+  const [popup, setPopup] = useState(false);
 
   const path = useLocation().pathname;
   const location = path.split("/")[1];
@@ -28,6 +30,10 @@ function NavBar() {
     });
   };
 
+  const togglePopup = () => {
+    setPopup(!popup);
+  };
+
   const menuToggle = () => {
     setNavOpen(!navOpen);
   };
@@ -42,9 +48,13 @@ function NavBar() {
       .then((response) => {
         console.log(response);
         setAuth({});
-        alert("You are logged out");
+        togglePopup();
       });
   };
+
+  setTimeout(() => {
+    setPopup(false);
+  }, 3000);
 
   return (
     <>
@@ -61,7 +71,7 @@ function NavBar() {
 
         <div className={`nav--primary ${navOpen && "nav--open"}`}>
           <div className="nav--anchors">
-            {location !== "appointment" ? (
+            {location === "" ? (
               <>
                 {" "}
                 <Scroll
@@ -165,6 +175,7 @@ function NavBar() {
             {auth.admin}
           </button>
         )}
+        {popup && <LogoutPopup />}
       </nav>
     </>
   );

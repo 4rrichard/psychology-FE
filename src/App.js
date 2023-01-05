@@ -15,20 +15,17 @@ import AuthContext from "./context/AuthProvider";
 import NotAuthenticated from "./components/NotAuthenticated/NotAuthenticated";
 import NotFound from "./components/NotFound/NotFound";
 import Home from "./components/Home/Home";
+import AllArticles from "./components/Blog/Articles/AllArticles/AllArticles";
+import NewArticle from "./components/Blog/Articles/NewArticle/NewArticle";
+import Article from "./components/Blog/Articles/Article/Article";
 
 function App() {
   const location = useLocation();
   const path = location.pathname;
   const { auth } = useContext(AuthContext);
-  const [display, setDisplay] = useState(true);
   const [displayPage, setDisplayPage] = useState(true);
 
   useEffect(() => {
-    if (path !== "/appointment") {
-      setDisplay(true);
-    } else {
-      setDisplay(false);
-    }
     if (path !== "/admin" && path !== "/login") {
       setDisplayPage(true);
     } else {
@@ -39,20 +36,18 @@ function App() {
   return (
     <>
       {displayPage && <NavBar />}
-      {display && displayPage && (
-        <>
-          <Home />
-        </>
-      )}
 
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/appointment" element={<Appointment />} />
-        <Route path="/admin/*" element={<AdminPage />} />
+        <Route path="/articles" element={<AllArticles />} />
         <Route
-          path="/login"
-          element={auth.user ? <Dashboard /> : <NotAuthenticated />}
+          path="/articles/new"
+          element={auth.admin ? <NewArticle /> : <NotAuthenticated />}
         />
+        <Route path="/articles/:pageName" element={<Article />} />
+        <Route path="/admin/*" element={<AdminPage />} />
+        <Route path="/login" element={<Dashboard />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {displayPage && (
